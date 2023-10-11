@@ -12,19 +12,35 @@ function Square({value, onSquareClick}){
 
 export default function Board() {
 
+  const [xIsNext, setXIsNext] = useState(true);
   const [squares, setSquares] = useState( Array(9).fill(null) );
 
   function handleClick(i){
+
+    if( squares[i] || calculateWinner(squares) ){ return; }
+
     //slice() creates a copy of the array
     const nextSquares = squares.slice();
-    nextSquares[i] = "X";
+
+    if (xIsNext){ nextSquares[i] = "X"; }
+    else { nextSquares[i] = "O"; }
+
     setSquares(nextSquares);
+    setXIsNext(!xIsNext);
   }
+
+  const winner = calculateWinner(squares);
+  let status;
+  if( winner ){ status = "Winner: " + winner; }
+  else{ status = "Next player: " + (xIsNext ? "X" : "O" ); }
 
   return (
     <>
+
+      <div className="status">{status}</div>
+
       <div className="board-row">
-      
+
       {/*  () => is an arrow function-- shorthand for declaring functions  
            so that handleClick will only trigger after the square is clicked
            (rather than redering immediately), causing an infinte loop       */}
@@ -45,4 +61,28 @@ export default function Board() {
       </div>
     </>
   );
+}
+
+
+
+
+// helper function -- copied n pasted
+function calculateWinner(squares) {
+  const lines = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6]
+  ];
+  for (let i = 0; i < lines.length; i++) {
+    const [a, b, c] = lines[i];
+    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+      return squares[a];
+    }
+  }
+  return null;
 }
