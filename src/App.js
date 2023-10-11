@@ -10,23 +10,18 @@ function Square({value, onSquareClick}){
 }
 
 
-export default function Board() {
-
-  const [xIsNext, setXIsNext] = useState(true);
-  const [squares, setSquares] = useState( Array(9).fill(null) );
+function Board({ xIsNext, squares, onPlay }) {
 
   function handleClick(i){
 
     if( squares[i] || calculateWinner(squares) ){ return; }
 
-    //slice() creates a copy of the array
     const nextSquares = squares.slice();
 
     if (xIsNext){ nextSquares[i] = "X"; }
     else { nextSquares[i] = "O"; }
 
-    setSquares(nextSquares);
-    setXIsNext(!xIsNext);
+    onPlay(nextSquares);
   }
 
   const winner = calculateWinner(squares);
@@ -40,11 +35,6 @@ export default function Board() {
       <div className="status">{status}</div>
 
       <div className="board-row">
-
-      {/*  () => is an arrow function-- shorthand for declaring functions  
-           so that handleClick will only trigger after the square is clicked
-           (rather than redering immediately), causing an infinte loop       */}
-
         <Square value={squares[0]} onSquareClick={() => handleClick(0)}/>
         <Square value={squares[1]} onSquareClick={() => handleClick(1)}/>
         <Square value={squares[2]} onSquareClick={() => handleClick(2)}/>
@@ -61,6 +51,62 @@ export default function Board() {
       </div>
     </>
   );
+}
+
+export default function Game(){
+
+  const [history, setHistory] = useState([Array(9).fill(null)]);
+  const [currentMove, setCurrentMove] = useState(0);
+  const xIsNext = currentMove % 2 === 0;
+  const currentSquares = history[currentMove];
+
+  function handlePlay(nextSquares){
+    //creates an array copying history + add nextSquares
+    const nextHistory = [...history.slice(0, currentMove+1), nextSquares];
+    setHistory(nextHistory);
+    setCurrentMove(nextHistory.length - 1);
+  }
+
+  function jumpTo(nextMove){
+    setCurrentMove(nextMove);
+  }
+
+  //creates a new array populated with the results of 
+  //calling a provided function on every element 
+  //in the calling array
+  const moves = history.map((squares, move) => {
+    let description;
+    if ( move > 0 ){ description = "Go to move #" + move; }
+    else{ description = "Go to game start"; }
+
+    return(
+      //Keys tell React about the identity of each component, 
+      //which allows React to maintain state between re-renders. 
+      //If a component’s key changes, the component will be destroyed and 
+      //re-created with a new state.
+      <li key={move}> 
+        <button onClick={()=>jumpTo(move)}> 
+          {description}
+        </button>
+      </li>
+    );
+  });
+
+  return (
+
+      <div className="game">
+        <div className="game-board">
+          <Board xIsNext={xIsNext}
+                 squares={currentSquares}
+                 onPlay={handlePlay} />
+        </div>
+
+        <div className="game-info">
+          <ol> {moves} </ol>
+        </div>
+      </div>
+
+    );
 }
 
 
